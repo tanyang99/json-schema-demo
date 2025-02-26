@@ -63,7 +63,7 @@
 1. 确保你已经安装了 Java 8 和 Maven。
 2. 克隆项目到本地：
    ```sh
-   git clone <项目仓库地址>
+   git clone https://github.com/tanyang99/json-schema-demo.git
    cd json-schema-demo
    ```
 3. 使用 Maven 构建和运行项目：
@@ -72,8 +72,14 @@
    mvn spring-boot:run
    ```
 4. 项目启动后，可以通过以下 URL 访问 API：
-    - 查询用户记录：`http://localhost:8080/api/users`
-    - 获取用户的订单信息：`http://localhost:8080/api/users/1/orders/2`
+    - 查询用户记录：
+      - case1：`http://localhost:8080/api/users?pageNum=1&pageSize=1&status=YES&userIds=1,2,3,4`
+      - case2: `http://localhost:8080/api/users?pageNum=你好&pageSize=Sdd&status=S`
+      - case3: `http://localhost:8080/api/users?status=YES&userIds=A,B,C`
+    - 获取用户的订单信息：
+      - case1: `http://localhost:8080/api/users/1/orders/2?status=YES`
+      - case2: `http://localhost:8080/api/users/u111/orders/O1111`
+      - case3: `http://localhost:8080/api/users/1/orders/o111?status=a`
     - 获取用户信息：`http://localhost:8080/api/users/1`
 
 ## 注意事项
