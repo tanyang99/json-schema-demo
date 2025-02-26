@@ -1,5 +1,3 @@
-以下是一个适合 `json-schema-demo` 项目的 `readme.md` 文件示例内容：
-
 # json-schema-demo 项目说明
 
 ## 项目概述

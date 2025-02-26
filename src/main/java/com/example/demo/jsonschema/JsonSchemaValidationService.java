@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ import java.util.Set;
 
 @Slf4j
 @Component
+@Data
 public class JsonSchemaValidationService {
 
     @Autowired
@@ -95,7 +97,7 @@ public class JsonSchemaValidationService {
      * @return 如果参数为空则返回true，否则返回false
      */
     private boolean hasParams(Map<String, Object> params) {
-        return params != null && !params.isEmpty();
+        return params != null ;
     }
 
     /**
@@ -175,7 +177,7 @@ public class JsonSchemaValidationService {
      * @param jsonSchema 对应的JSON Schema
      */
     private void performValidation(String uri, Map<String, Object> params, JsonSchema jsonSchema) {
-        if (params == null) {
+        if (!hasParams(params)) {
             return;
         }
         JsonNode jsonNode = objectMapper.valueToTree(params);
