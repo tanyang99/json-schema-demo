@@ -1,0 +1,76 @@
+server:
+  port: 8080
+
+json-schema:
+  enabled: true
+  exclude-uris:
+    - "/api/users/{userId}"
+  # 需要验证的 HTTP 请求方法
+  include-methods:
+    - GET
+  schemas:
+    - description: "用户列表"
+      enabled: true
+      uri: "/api/users"
+      schema: >
+        {
+        	"$schema": "http://json-schema.org/draft-07/schema#",
+        	"type": "object",
+        	"properties": {
+        		"pageNum": {
+        			"type": "string",
+        			"pattern": "^[0-9]+$",
+        			"default": "1"
+        		},
+        		"pageSize": {
+        			"type": "string",
+        			"pattern": "^[0-9]+$",
+        			"default": "10"
+        		},
+        		"status": {
+        			"type": ["string", "null"],
+        			"enum": ["YES", "NO", "UNKNOWN", null]
+        		},
+        		"userIds": {
+        			"type": "string",
+        			"pattern": "^[0-9]+(,[0-9]+)*$"
+        		}
+        	},
+        	"required": ["pageNum", "pageSize"],
+        	"errorMessages": {
+        		"pageNum": "pageNum 必填，且为数字，且从1开始",
+        		"pageSize": "pageSize 必填，且为数字，且从1开始",
+        		"status": "status 值必须为 YES、NO、UNKNOWN其中之一",
+        		"userIds": "userIds 必须是一个数组"
+        	}
+        }
+    - description: "查询订单"
+      uri: "/api/users/{userId}/orders/{orderId}"
+      enabled: true
+      schema: >
+        {
+        	"$schema": "http://json-schema.org/draft-07/schema#",
+        	"title": "查询订单",
+        	"description": "用于验证 /api/users/{userId}/orders/{orderId} GET API 请求参数的模式",
+        	"type": "object",
+        	"properties": {
+        		"userId": {
+        			"type": "string",
+        			"pattern": "^[1-9]\\d*$"
+        		},
+        		"orderId": {
+        			"type": "string",
+        			"pattern": "^[1-9]\\d*$"
+        		},
+        		"status": {
+        			"type": ["string", "null"],
+        			"enum": ["YES", "NO", "UNKNOWN", null]
+        		}
+        	},
+        	"required": ["userId", "orderId"],
+        	"errorMessages": {
+        		"userId": "userId 必填，且为数字",
+        		"orderId": "orderId 必填，且为数字",
+        		"status": "status 值必须为 YES、NO、UNKNOWN其中之一"
+            }
+        }
