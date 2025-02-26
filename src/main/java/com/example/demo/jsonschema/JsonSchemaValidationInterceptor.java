@@ -1,5 +1,7 @@
 package com.example.demo.jsonschema;
 
+import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
@@ -14,6 +16,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
+@Getter
+@Data
 @Component
 public class JsonSchemaValidationInterceptor implements HandlerInterceptor {
 
@@ -29,7 +33,7 @@ public class JsonSchemaValidationInterceptor implements HandlerInterceptor {
         }
         // 提取请求参数
         Map<String, Object> params = extractRequestParams(request);
-        jsonSchemaValidationService.validate(request.getMethod(), request.getRequestURI(), params);
+        this.getJsonSchemaValidationService().validate(request.getMethod(), request.getRequestURI(), params);
         return true;
 
     }

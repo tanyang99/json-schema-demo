@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
 import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,7 @@ import java.util.Set;
 
 @Slf4j
 @Component
+@Getter
 @Data
 public class JsonSchemaValidationService {
 
@@ -54,11 +56,7 @@ public class JsonSchemaValidationService {
      * @return 如果应该验证返回true，否则返回false
      */
     private boolean shouldValidate(String method, String uri, Map<String, Object> params) {
-        return isValidationEnabled()
-                && isMethodAllowed(method)
-                && isValidUri(uri)
-                && hasParams(params)
-                && !isUriExcluded(uri);
+        return isValidationEnabled() && isMethodAllowed(method) && isValidUri(uri) && hasParams(params) && !isUriExcluded(uri);
     }
 
     /**
@@ -67,7 +65,7 @@ public class JsonSchemaValidationService {
      * @return 如果启用则返回true，否则返回false
      */
     private boolean isValidationEnabled() {
-        return jsonSchemaConfig.isEnabled();
+        return this.getJsonSchemaConfig().isEnabled();
     }
 
     /**
@@ -77,7 +75,7 @@ public class JsonSchemaValidationService {
      * @return 如果在允许的方法列表中则返回true，否则返回false
      */
     private boolean isMethodAllowed(String method) {
-        return jsonSchemaConfig.getIncludeMethods().contains(method);
+        return this.getJsonSchemaConfig().getIncludeMethods().contains(method);
     }
 
     /**
@@ -97,7 +95,7 @@ public class JsonSchemaValidationService {
      * @return 如果参数为空则返回true，否则返回false
      */
     private boolean hasParams(Map<String, Object> params) {
-        return params != null ;
+        return params != null;
     }
 
     /**
@@ -107,7 +105,7 @@ public class JsonSchemaValidationService {
      * @return 如果URI在排除列表中则返回true，否则返回false
      */
     private boolean isUriExcluded(String uri) {
-        return jsonSchemaConfig.getExcludeUris().contains(uri);
+        return this.getJsonSchemaConfig().getExcludeUris().contains(uri);
     }
 
     /**
@@ -118,7 +116,7 @@ public class JsonSchemaValidationService {
      * @return 调整后的URI
      */
     private String adjustUri(String uri, Map<String, Object> params) {
-        Set<String> pathVariableUriSet = jsonSchemaConfig.getPathVariableUriSet();
+        Set<String> pathVariableUriSet = this.getJsonSchemaConfig().getPathVariableUriSet();
         UriMatcher.UriMatchResult matchResult = findMatchingUri(uri, pathVariableUriSet);
 
         if (matchResult != null && matchResult.isMatch()) {
@@ -162,7 +160,7 @@ public class JsonSchemaValidationService {
      * @return 对应的JSON Schema，如果不存在则返回null
      */
     private JsonSchema getSchema(String uri) {
-        JsonSchema jsonSchema = jsonSchemaConfig.getSchemaMap().get(uri);
+        JsonSchema jsonSchema = this.getJsonSchemaConfig().getSchemaMap().get(uri);
         if (jsonSchema == null) {
             log.warn("No JSON schema found for URI: {}", uri);
         }
@@ -180,7 +178,7 @@ public class JsonSchemaValidationService {
         if (!hasParams(params)) {
             return;
         }
-        JsonNode jsonNode = objectMapper.valueToTree(params);
+        JsonNode jsonNode = this.getObjectMapper().valueToTree(params);
         Set<ValidationMessage> validationMessages = jsonSchema.validate(jsonNode);
 
         if (!validationMessages.isEmpty()) {
@@ -240,7 +238,7 @@ public class JsonSchemaValidationService {
             if (customMessageNode != null && customMessageNode.isTextual()) {
                 String customMessage = customMessageNode.asText().trim();
                 if (!customMessage.isEmpty()) {
-                    return String.format(" 参数 '%s' 验证失败 ： '%s' ", nodeName, customMessage);
+                    return String.format("参数 '%s' 验证失败 ： '%s' ", nodeName, customMessage);
                 }
             }
         } catch (Exception e) {

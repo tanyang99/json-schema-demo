@@ -3,6 +3,7 @@ package com.example.demo.jsonschema;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.*;
 import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -70,11 +71,18 @@ public class JsonSchemaConfig {
     private List<SchemaConfig> schemas = new ArrayList<>();
     /**
      * 存储验证通过的 URI 和对应的 JsonSchema 对象的映射。
+     * -- GETTER --
+     *  获取验证通过的 URI 和对应的 JsonSchema 对象的映射。
+     *
+     * @return 包含验证通过的 URI 和 JsonSchema 对象的映射。
+
      */
+    @Getter
     private Map<String, JsonSchema> schemaMap = new HashMap<>();
     /**
      * 存储有 PathVariable 变量的 URI 的集合。
      */
+    @Getter
     private Set<String> pathVariableUriSet = new HashSet<>();
 
     /**
@@ -113,15 +121,6 @@ public class JsonSchemaConfig {
                 throw new IllegalArgumentException(errorMessage, e);
             }
         }
-    }
-
-    /**
-     * 获取验证通过的 URI 和对应的 JsonSchema 对象的映射。
-     *
-     * @return 包含验证通过的 URI 和 JsonSchema 对象的映射。
-     */
-    public Map<String, JsonSchema> getSchemaMap() {
-        return schemaMap;
     }
 
     /**
