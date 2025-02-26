@@ -82,9 +82,18 @@
 - JSON Schema 验证是通过拦截器实现的，确保在配置中正确设置了需要验证的 API 路径和请求方法。
 - 当请求参数不符合 JSON Schema 规则时，会返回相应的错误信息。
 
+- 目前仅支持 `GET` 请求。其他 HTTP 请求方法（如 `POST`, `PUT`, `DELETE` 等）暂不支持。
+  - **PathVariable（路径变量）**：支持通过路径变量传递参数。例如在 URL 中 `/api/users/{userId}/orders/{orderId}`，`{userId}` 和 `{orderId}` 就是路径变量。
+  - **Request Parameter（请求参数）**：支持通过请求参数传递数据，通常在 URL 后面以 `?key=value` 的形式传递，例如 `/api/users?pageNum=1&pageSize=10`。
+  - **Body 参数**：不支持通过请求体（如 JSON 或表单数据）传递参数。
+
+请在使用时注意这些限制，以确保请求能够被正确处理。
+
 ## 贡献指南
 如果你发现了任何问题或者有改进的建议，欢迎提交 Issue 或者 Pull Request。
 
 ## 许可证
 本项目使用 [MIT 许可证](https://opensource.org/licenses/MIT)。
-```
+
+
+
