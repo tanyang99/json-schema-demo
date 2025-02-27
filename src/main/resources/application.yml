@@ -9,68 +9,133 @@ json-schema:
   include-methods:
     - GET
   schemas:
-    - description: "用户列表"
+    - description: "外呼记录参数验证"
       enabled: true
       uri: "/api/users"
       schema: >
         {
-        	"$schema": "http://json-schema.org/draft-07/schema#",
-        	"type": "object",
-        	"properties": {
-        		"pageNum": {
-        			"type": "string",
-        			"pattern": "^[0-9]+$",
-        			"default": "1"
-        		},
-        		"pageSize": {
-        			"type": "string",
-        			"pattern": "^[0-9]+$",
-        			"default": "10"
-        		},
-        		"status": {
-        			"type": ["string", "null"],
-        			"enum": ["YES", "NO", "UNKNOWN", null]
-        		},
-        		"userIds": {
-        			"type": "string",
-        			"pattern": "^[0-9]+(,[0-9]+)*$"
-        		}
-        	},
-        	"required": ["pageNum", "pageSize"],
-        	"errorMessages": {
-        		"pageNum": "pageNum 必填，且为数字，且从1开始",
-        		"pageSize": "pageSize 必填，且为数字，且从1开始",
-        		"status": "status 值必须为 YES、NO、UNKNOWN其中之一",
-        		"userIds": "userIds 必须是一个数组"
-        	}
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {
+                "pageNum": {
+                    "type": "string",
+                    "pattern": "^[0-9]+$",
+                    "default": "1",
+                    "minLength": 1,
+                    "maxLength": 5
+                },
+                "pageSize": {
+                    "type": "string",
+                    "pattern": "^[0-9]+$",
+                    "default": "10",
+                    "minLength": 1,
+                    "maxLength": 5
+                },
+                "status": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "enum": [
+                        "YES",
+                        "NO",
+                        "UNKNOWN",
+                        null
+                    ],
+                    "minLength": 3,
+                    "maxLength": 7
+                },
+                "userIds": {
+                    "type": "string",
+                    "pattern": "^[0-9]+(,[0-9]+)*$",
+                    "minLength": 1,
+                    "maxLength": 20
+                }
+            },
+            "required": [
+                "pageNum",
+                "pageSize"
+            ],
+            "errorMessages": {
+                "pageNum": "pageNum 必填，且为数字，且从1开始，长度在1到5之间",
+                "pageSize": "pageSize 必填，且为数字，且从1开始，长度在1到5之间",
+                "status": "status 不为空时，值必须为 YES、NO、UNKNOWN 其中之一",
+                "userIds": "userIds 必须是一个数组，长度在1到20之间"
+            }
         }
     - description: "查询订单"
       uri: "/api/users/{userId}/orders/{orderId}"
       enabled: true
       schema: >
         {
-        	"$schema": "http://json-schema.org/draft-07/schema#",
-        	"title": "查询订单",
-        	"description": "用于验证 /api/users/{userId}/orders/{orderId} GET API 请求参数的模式",
-        	"type": "object",
-        	"properties": {
-        		"userId": {
-        			"type": "string",
-        			"pattern": "^[1-9]\\d*$"
-        		},
-        		"orderId": {
-        			"type": "string",
-        			"pattern": "^[1-9]\\d*$"
-        		},
-        		"status": {
-        			"type": ["string", "null"],
-        			"enum": ["YES", "NO", "UNKNOWN", null]
-        		}
-        	},
-        	"required": ["userId", "orderId"],
-        	"errorMessages": {
-        		"userId": "userId 必填，且为数字",
-        		"orderId": "orderId 必填，且为数字",
-        		"status": "status 值必须为 YES、NO、UNKNOWN其中之一"
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "title": "查询订单",
+            "description": "用于验证 /api/users/{userId}/orders/{orderId} GET API 请求参数的模式",
+            "type": "object",
+            "definitions": {
+                "numericId": {
+                    "type": "string",
+                    "pattern": "^[1-9]\\d*$",
+                    "description": "由正整数组成的 ID"
+                },
+                "orderStatus": {
+                    "type": "string",
+                    "enum": [
+                        "YES",
+                        "NO",
+                        "UNKNOWN"
+                    ],
+                    "description": "订单状态，取值为 YES、NO 或 UNKNOWN"
+                }
+            },
+            "properties": {
+                "userId": {
+                    "$ref": "#/definitions/numericId",
+                    "description": "用户 ID"
+                },
+                "orderId": {
+                    "$ref": "#/definitions/numericId",
+                    "description": "订单 ID"
+                },
+                "status": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/orderStatus"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "订单状态，可为 YES、NO、UNKNOWN 或 null"
+                },
+                "orderDate": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+                    "description": "订单日期，格式为 YYYY-MM-DD"
+                }
+            },
+            "required": [
+                "userId",
+                "orderId"
+            ],
+            "if": {
+                "properties": {
+                    "status": {
+                        "not": {
+                            "type": "null"
+                        }
+                    }
+                }
+            },
+            "then": {
+                "required": [
+                    "orderDate"
+                ]
+            },
+            "errorMessages": {
+                "userId": "userId 是必填项，且必须为正整数",
+                "orderId": "orderId 是必填项，且必须为正整数",
+                "status": "status 不为空时，值必须为 YES、NO、UNKNOWN 其中之一",
+                "orderDate": "当 status 不为空时，订单日期（orderDate）是必填项，且格式必须为 YYYY-MM-DD,"
             }
         }

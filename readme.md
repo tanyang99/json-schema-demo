@@ -32,31 +32,77 @@
   enabled: true
   schema: >
     {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "title": "查询订单",
-        "description": "用于验证 /api/users/{userId}/orders/{orderId} GET API 请求参数的模式",
-        "type": "object",
-        "properties": {
-            "userId": {
-                "type": "string",
-                "pattern": "^[1-9]\\d*$"
-            },
-            "orderId": {
-                "type": "string",
-                "pattern": "^[1-9]\\d*$"
-            },
-            "status": {
-                "type": ["string", "null"],
-                "enum": ["YES", "NO", "UNKNOWN", null]
-            }
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "查询订单",
+    "description": "用于验证 /api/users/{userId}/orders/{orderId} GET API 请求参数的模式",
+    "type": "object",
+    "definitions": {
+        "numericId": {
+            "type": "string",
+            "pattern": "^[1-9]\\d*$",
+            "description": "由正整数组成的 ID"
         },
-        "required": ["userId", "orderId"],
-        "errorMessages": {
-            "userId": "userId 必填，且为数字",
-            "orderId": "orderId 必填，且为数字",
-            "status": "status 值必须为 YES、NO、UNKNOWN其中之一"
+        "orderStatus": {
+            "type": "string",
+            "enum": [
+                "YES",
+                "NO",
+                "UNKNOWN"
+            ],
+            "description": "订单状态，取值为 YES、NO 或 UNKNOWN"
         }
+    },
+    "properties": {
+        "userId": {
+            "$ref": "#/definitions/numericId",
+            "description": "用户 ID"
+        },
+        "orderId": {
+            "$ref": "#/definitions/numericId",
+            "description": "订单 ID"
+        },
+        "status": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/orderStatus"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "description": "订单状态，可为 YES、NO、UNKNOWN 或 null"
+        },
+        "orderDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+            "description": "订单日期，格式为 YYYY-MM-DD"
+        }
+    },
+    "required": [
+        "userId",
+        "orderId"
+    ],
+    "if": {
+        "properties": {
+            "status": {
+                "not": {
+                    "type": "null"
+                }
+            }
+        }
+    },
+    "then": {
+        "required": [
+            "orderDate"
+        ]
+    },
+    "errorMessages": {
+        "userId": "userId 是必填项，且必须为正整数",
+        "orderId": "orderId 是必填项，且必须为正整数",
+        "status": "status 不为空时，值必须为 YES、NO、UNKNOWN 其中之一",
+        "orderDate": "当 status 不为空时，订单日期（orderDate）是必填项，且格式必须为 YYYY-MM-DD,"
     }
+}
 ```
 
 ## 运行项目
@@ -80,6 +126,8 @@
       - case1: `http://localhost:8080/api/users/1/orders/2?status=YES`
       - case2: `http://localhost:8080/api/users/u111/orders/O1111`
       - case3: `http://localhost:8080/api/users/1/orders/o111?status=a`
+      - case4：`http://localhost:8080/api/users/1/orders/2?status=YES&orderDate=2024-01-01`
+      - case5：`http://localhost:8080/api/users/1/orders/2?status=YES`
     - 获取用户信息：`http://localhost:8080/api/users/1`
 
 ## 注意事项
@@ -90,6 +138,49 @@
   - **PathVariable（路径变量）**：支持通过路径变量传递参数。例如在 URL 中 `/api/users/{userId}/orders/{orderId}`，`{userId}` 和 `{orderId}` 就是路径变量。
   - **Request Parameter（请求参数）**：支持通过请求参数传递数据，通常在 URL 后面以 `?key=value` 的形式传递，例如 `/api/users?pageNum=1&pageSize=10`。
   - **Body 参数**：不支持通过请求体（如 JSON 或表单数据）传递参数。
+
+- 自定义错误信息
+  - 在json schema中通过 errorMessages 自定义了异常提示信息如下，如果不提供该信息，将默认输出json schema的message
+  ```json
+  {
+    "errorMessages": {
+      "userId": "userId 是必填项，且必须为正整数",
+      "orderId": "orderId 是必填项，且必须为正整数",
+      "status": "status 不为空时，值必须为 YES、NO、UNKNOWN 其中之一",
+      "orderDate": "当 status 不为空时，订单日期（orderDate）是必填项，且格式必须为 YYYY-MM-DD,"
+    }
+  }
+  ```
+  - 在[JsonSchemaValidationService.java](src%2Fmain%2Fjava%2Fcom%2Fexample%2Fdemo%2Fjsonschema%2FJsonSchemaValidationService.java)中 getCustomErrorMessage方法实现了自定义错误信息的获取
+  ```java
+   private String getCustomErrorMessage(ValidationMessage message, JsonSchema jsonSchema) {
+        try {
+            // 获取包含自定义错误信息的节点
+            JsonNode errorMessagesNode = jsonSchema.getSchemaNode().at("/errorMessages");
+            if (errorMessagesNode.isMissingNode()) {
+                return message.getMessage();
+            }
+
+            // 获取节点名称
+            String nodeName = getNodeName(message);
+            JsonNode customMessageNode = errorMessagesNode.get(nodeName);
+
+            // 检查节点是否存在且为文本类型，并且文本内容不为空
+            if (customMessageNode != null && customMessageNode.isTextual()) {
+                String customMessage = customMessageNode.asText().trim();
+                if (!customMessage.isEmpty()) {
+                    return String.format("参数 '%s' 验证失败 ： '%s' ", nodeName, customMessage);
+                }
+            }
+        } catch (Exception e) {
+            // 记录处理验证消息时的异常信息
+            log.warn("Error processing validation message", e);
+        }
+        // 若未找到有效自定义消息，返回原始验证消息
+        return message.getMessage();
+    }
+  
+  ```
 
 请在使用时注意这些限制，以确保请求能够被正确处理。
 

@@ -15,10 +15,10 @@ public class UserController {
     /**
      * 查询用户记录
      *
-     * @param pageNum    页码，默认值为1
-     * @param pageSize   每页记录数，默认值为10
-     * @param status 外呼状态，可选参数
-     * @param userIds    用户ID数组，可选参数
+     * @param pageNum  页码，默认值为1
+     * @param pageSize 每页记录数，默认值为10
+     * @param status   外呼状态，可选参数
+     * @param userIds  用户ID数组，可选参数
      * @return 响应结果
      */
     @GetMapping("/users")
@@ -49,11 +49,13 @@ public class UserController {
     public ResponseEntity<String> getUserOrder(
             @PathVariable("userId") String userId,
             @PathVariable("orderId") String orderId,
-            @RequestParam(value = "status", required = false) UserStatus status) {
+            @RequestParam(value = "status", required = false) UserStatus status,
+            @RequestParam(value = "orderDate", required = false) String orderDate) {
         try {
             // 这里可以添加实际的业务逻辑
-            log.info("获取用户 {} 的订单 {} 信息，订单状态: {}", userId, orderId, status);
-            return ResponseEntity.ok("OK");
+            String res = String.format("获取用户 %s 的订单 %s 信息，订单状态: %s, 订单时间: %s", userId, orderId, status, orderDate);
+            log.info(res);
+            return ResponseEntity.ok(res);
         } catch (Exception e) {
             log.error("获取用户订单信息时发生错误，用户ID: {}, 订单ID: {}", userId, orderId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("获取用户订单信息时发生错误");
